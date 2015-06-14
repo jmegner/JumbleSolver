@@ -13,7 +13,7 @@ used languages:
 Each jumble solver takes dictionary files as command line arguments.  Once the
 dictionary files are processed, the user is presented with a prompt.  Once the
 user enters a word, the jumble solver prints out all anagrams of that word that
-was found in the dictionary files. The get-word-print-anagrams process is
+were found in the dictionary files. The get-word-print-anagrams process is
 repeated until the user terminates input (either by doing ctrl+d on the
 keyboard or the end of a file).
 
