@@ -1,0 +1,10 @@
+# c, c++
+*.exe
+*.out
+
+# java
+*.class
+
+# python
+*.pyc
+
