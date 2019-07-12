@@ -3,12 +3,13 @@ Jumble Solver written multiple times in different programming languages.
 used languages:
     c
     c++
-    java
-    perl
-    ruby
-    python
-    scheme
     haskell
+    java
+    javascript
+    perl
+    python
+    ruby
+    scheme
 
 Each jumble solver takes dictionary files as command line arguments.  Once the
 dictionary files are processed, the user is presented with a prompt.  Once the
