@@ -8,3 +8,7 @@
 # python
 *.pyc
 
+.vs/
+bin/
+obj/
+launchSettings.json
