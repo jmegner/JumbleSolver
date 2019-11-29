@@ -17,10 +17,18 @@ TODO: read "rust turbofish" google results
 fn main() -> Result<(), Box<dyn Error>> {
     let mut sorted_to_origs: HashMap<Vec<char>, BTreeSet<String>> = Default::default();
 
+    // following works if given a path-string with invalid unicode
     for arg in std::env::args_os().skip(1) {
         let path: PathBuf = arg.into();
         add_words(&mut sorted_to_origs, &path)?;
     }
+
+    // simpler, but will panic if given invalid unicode
+    /*
+    for arg in std::env::args().skip(1) {
+        add_words(&mut sorted_to_origs, Path::new(&arg))?;
+    }
+    */
 
     print!("$ ");
     std::io::stdout().flush()?;
