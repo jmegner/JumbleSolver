@@ -17,7 +17,7 @@ fn main() {
         let origWord = line.expect("could not read line");
         let mut chars : Vec<char> = origWord.chars().collect();
         chars.sort();
-        let sortedWord = String::from_iter(chars);
+        let sortedWord : String = chars.into_iter().collect();
         println!("orig={}", origWord);
         println!("sorted={}", sortedWord);
         //if sortedToOrigs.contains_key(&word)
