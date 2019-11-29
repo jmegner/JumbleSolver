@@ -10,6 +10,7 @@ used languages:
     perl
     python
     ruby
+    rust
     scheme
 
 Each jumble solver takes dictionary files as command line arguments.  Once the
