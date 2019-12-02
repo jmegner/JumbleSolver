@@ -1,17 +1,17 @@
 Jumble Solver written multiple times in different programming languages.
 
-used languages:
-    c
-    c++/cpp/cplusplus
-    c#/csharp
-    haskell
-    java
-    javascript
-    perl
-    python
-    ruby
-    rust
-    scheme
+Used languages:
+    C
+    C++/cpp/cplusplus
+    C#/csharp
+    Haskell
+    Java
+    JavaScript
+    Perl
+    Python
+    Ruby
+    Rust
+    Scheme
 
 Each jumble solver takes dictionary files as command line arguments.  Once the
 dictionary files are processed, the user is presented with a prompt.  Once the
@@ -25,4 +25,6 @@ to a set of all words that sort to that word.  So, each time the user provides
 a word, the jumble solver sorts the word, and prints the corresponding
 collection of words.  This technique was chosen for its simplicity and
 computational efficiency.
+
+Reminder for myself: words from dictionary files and user are lowercased.
 
