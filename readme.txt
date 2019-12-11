@@ -26,5 +26,6 @@ a word, the jumble solver sorts the word, and prints the corresponding
 collection of words.  This technique was chosen for its simplicity and
 computational efficiency.
 
-Reminder for myself: words from dictionary files and user are lowercased.
+Reminder for myself: words from dictionary files and user should become
+lowercase before use
 
