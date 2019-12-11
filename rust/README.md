@@ -1,4 +1,4 @@
-For Rust development in Visual Studio Code (vscode)...
+# Setup Rust development in Visual Studio Code (vscode)...
 
 1: Install rust toolchain via [rustup](https://www.rust-lang.org/tools/install).
 
@@ -17,3 +17,11 @@ For Rust development in Visual Studio Code (vscode)...
 7: Checkmark "allow setting breakpoints in any file" setting.  Can search for "break" in settings.
 
 Note: I originally followed the instructions at [this blog post](https://www.forrestthewoods.com/blog/how-to-debug-rust-with-visual-studio-code/).
+
+# Development Actions
+
+* To force build, use Ctrl+Shift+B shortcut to do a "cargo build"
+
+* In terminal, run "cargo fmt" to run rustfmt autoformatter over code.
+
+* Reminder: Racer [issue #1033](https://github.com/racer-rust/racer/issues/1033) means standard prelude stuff is not auto-completed.
