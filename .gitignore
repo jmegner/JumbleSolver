@@ -11,4 +11,6 @@
 .vs/
 bin/
 obj/
+Debug/
+Release/
 launchSettings.json

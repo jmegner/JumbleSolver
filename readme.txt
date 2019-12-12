@@ -2,7 +2,7 @@ Jumble Solver written multiple times in different programming languages.
 
 Used languages:
     C
-    C++/cpp/cplusplus (C++03)
+    C++/cpp/cplusplus (C++03, C++17)
     C#/csharp
     Haskell
     Java
