@@ -1,4 +1,13 @@
 /*
+My thanks to Jimmy Brisson for interactively helping me through a lot of this
+program and educating me on language features I had not yet read about.
+https://github.com/theotherjimmy
+
+My thanks to Guillaume Depardon (Globi#0117/Globi::<!> on Rust's Discord
+channel https://discord.gg/rust-lang) for helping me understand and fix my
+problems with std::slice::Join::join (https://doc.rust-lang.org/std/slice/trait.Join.html)
+https://github.com/Globidev
+
 Some notes for people unfamiliar with Rust language...
 
 Rust has two naming styles...
@@ -62,7 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             None => println!("no anagrams in dictionary"),
             Some(orig_words) => println!("{}", itertools::join(orig_words, ", ")),
             // an alternate way without itertools crate...
-            // Some(orig_words) => println!("{}", orig_words.iter().cloned().collect::<Vec<_>>().join(", ")),
+            //Some(orig_words) => println!("{}", orig_words.iter().map(String::as_str).collect::<Vec<_>>().join(", ")),
         }
 
         print!("$ ");
