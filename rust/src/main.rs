@@ -1,34 +1,52 @@
+/*
+Some notes for people unfamiliar with Rust language...
+
+Rust has two naming styles...
+    LeadingUpperCamelCase: struct, trait
+    snake_case: everything else
+
+Rust has Hindley-Milner type inference, where the desired return type can be
+used by the compiler to select the appropriate function; sometimes the
+turbofish operator ("::<Something>") is needed (especially for collect method)
+for compiler to figure out desired return type; articles:
+    https://matematikaadit.github.io/posts/rust-turbofish.html
+    https://techblog.tonsser.com/posts/what-is-rusts-turbofish
+
+The "What is Rust's Turbofish" article above also explains that the Into<T>::into method can not be
+simply turbofished with "someVar.into::<DesiredType>()"; you'd have to do
+"Into::<DesiredType>::into(someVar)";
+
+The question/? operator is used on Result types, either UNWRAPPING the Ok's inner value or
+RETURNING the Err's inner value;
+https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html
+
+I still don't fully understand why our Err portion of our Result types was chosen to be
+Box<dyn Error>; I think we need to box the error so the size/type does not have to be fully
+determined at build time (and furthermore we don't have to choose a type at build time and convert
+errors into our chosen type); I think the "dyn" keyword is part of making it explicit that "Error"
+in "dyn Error" is a trait (dynamically sized), not a type (statically sized).
+
+As of 2019-12-04, Racer issue #1033 means that RLS autocomplete does not work for things inside the
+standard prelude; when I was using std::convert::Into<T>::into, I had to add "use
+std::convert::Into;" for RLS autocomplete to work; https://github.com/racer-rust/racer/issues/1033
+*/
+
 use std::collections::{BTreeSet, HashMap};
-use std::convert::Into; // part of std::core::prelude, but needed for RLS/intellisense to work
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::io::{self, BufRead};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use itertools;
 
-/*
-LeadingUpperCamelCase: struct, trait
-snake_case: everything else
-
-TODO: read "rust turbofish" google results
-*/
-
-// TODO: reference to question operator and function returning a Result
 fn main() -> Result<(), Box<dyn Error>> {
     let mut sorted_to_origs: HashMap<Vec<char>, BTreeSet<String>> = Default::default();
 
-    // following works if given a path-string with invalid unicode
+    // following works even if given a path-string with invalid unicode;
+    // could use std::env::args(), which will panic if given invalid unicode;
     for arg in std::env::args_os().skip(1) {
-        let path: PathBuf = arg.into();
-        add_words(&mut sorted_to_origs, &path)?;
-    }
-
-    // simpler, but will panic if given invalid unicode
-    /*
-    for arg in std::env::args().skip(1) {
         add_words(&mut sorted_to_origs, Path::new(&arg))?;
     }
-    */
 
     print!("$ ");
     std::io::stdout().flush()?;
@@ -42,14 +60,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         match sorted_to_origs.get(&as_sorted(&word)) {
             None => println!("no anagrams in dictionary"),
-            // TODO: find out best way to go from BTreeSet to slice so we can do slice.join()
-            //Some(&orig_words) => println!("{}", orig_words.iter().collect::<Vec<_>>().join(", "))
-            Some(orig_words) => {
-                for word in orig_words {
-                    print!("{} ", word);
-                }
-                println!("");
-            }
+            Some(orig_words) => println!("{}", itertools::join(orig_words, ", ")),
+            // an alternate way without itertools crate...
+            // Some(orig_words) => println!("{}", orig_words.iter().cloned().collect::<Vec<_>>().join(", ")),
         }
 
         print!("$ ");
@@ -79,7 +92,10 @@ fn add_words(
 }
 
 fn as_sorted(word: &str) -> Vec<char> {
-    let mut sorted_chars: Vec<char> = word.chars().collect::<Vec<char>>();
+    itertools::sorted(word.chars()).collect()
+    /* // an alernate way without itertools crate...
+    let mut sorted_chars = word.chars().collect::<Vec<_>>();
     sorted_chars.sort();
     sorted_chars
+    */
 }
