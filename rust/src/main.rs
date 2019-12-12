@@ -26,7 +26,7 @@ determined at build time (and furthermore we don't have to choose a type at buil
 errors into our chosen type); I think the "dyn" keyword is part of making it explicit that "Error"
 in "dyn Error" is a trait (dynamically sized), not a type (statically sized).
 
-As of 2019-12-04, Racer issue #1033 means that RLS autocomplete does not work for things inside the
+As of 2019-12-04, Racer issue #1033 means that RLS autocomplete does not work for all things inside the
 standard prelude; when I was using std::convert::Into<T>::into, I had to add "use
 std::convert::Into;" for RLS autocomplete to work; https://github.com/racer-rust/racer/issues/1033
 */
