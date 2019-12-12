@@ -49,6 +49,11 @@ use std::path::Path;
 use itertools;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    if std::env::args_os().count() < 2 {
+        println!("usage: jumble_solver_rust.exe DICTIONARY_FILE [DICTIONARY_FILE] ...");
+        return Ok(());
+    }
+
     let mut sorted_to_origs: HashMap<Vec<char>, BTreeSet<String>> = Default::default();
 
     // following works even if given a path-string with invalid unicode;
