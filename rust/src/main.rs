@@ -40,13 +40,15 @@ standard prelude; when I was using std::convert::Into<T>::into, I had to add "us
 std::convert::Into;" for RLS autocomplete to work; https://github.com/racer-rust/racer/issues/1033
 */
 
+use itertools;
 use std::collections::{BTreeSet, HashMap};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::io::{self, BufRead};
 use std::path::Path;
-use itertools;
+
+type WordMap = HashMap<Vec<char>, BTreeSet<String>>;
 
 fn main() -> Result<(), Box<dyn Error>> {
     if std::env::args_os().count() < 2 {
@@ -54,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let mut sorted_to_origs: HashMap<Vec<char>, BTreeSet<String>> = Default::default();
+    let mut sorted_to_origs: WordMap = Default::default();
 
     // following works even if given a path-string with invalid unicode;
     // could use std::env::args(), which will panic if given invalid unicode;
@@ -66,13 +68,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     std::io::stdout().flush()?;
 
     for line in std::io::stdin().lock().lines() {
-        let word = line?.to_ascii_lowercase();
+        let word = line?;
 
         if word.is_empty() {
             break;
         }
 
-        match sorted_to_origs.get(&as_sorted(&word)) {
+        match sorted_to_origs.get(&as_sorted_lowercase(&word)) {
             None => println!("no anagrams in dictionary"),
             Some(orig_words) => println!("{}", itertools::join(orig_words, ", ")),
             // an alternate way without itertools crate...
@@ -86,30 +88,83 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn add_words(
-    sorted_to_origs: &mut HashMap<Vec<char>, BTreeSet<String>>,
-    path: &Path,
-) -> Result<(), Box<dyn Error>> {
+fn add_words(sorted_to_origs: &mut WordMap, path: &Path) -> Result<(), Box<dyn Error>> {
     let file = File::open(&path)?;
 
     for line in io::BufReader::new(file).lines() {
-        let orig_word = line?.to_ascii_lowercase();
-        let sorted_chars = as_sorted(&orig_word);
-
-        sorted_to_origs
-            .entry(sorted_chars)
-            .or_default()
-            .insert(orig_word);
+        add_word(sorted_to_origs, &line?);
     }
 
     Ok(())
 }
 
-fn as_sorted(word: &str) -> Vec<char> {
-    itertools::sorted(word.chars()).collect()
+fn add_word(sorted_to_origs: &mut WordMap, word: &str) {
+    let lower_word = word.to_ascii_lowercase();
+    let sorted_chars = as_sorted_lowercase(&lower_word);
+
+    sorted_to_origs
+        .entry(sorted_chars)
+        .or_default()
+        .insert(lower_word);
+}
+
+fn as_sorted_lowercase(word: &str) -> Vec<char> {
+    itertools::sorted(word.to_ascii_lowercase().chars()).collect()
     /* // an alernate way without itertools crate...
-    let mut sorted_chars = word.chars().collect::<Vec<_>>();
+    let mut sorted_chars = word.to_ascii_lowercase().chars().collect::<Vec<_>>();
     sorted_chars.sort();
     sorted_chars
     */
+}
+
+#[cfg(test)]
+#[macro_use]
+extern crate maplit;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct TestData {
+        word_1: String,
+        word_2: String,
+        word_1_2_sorted: Vec<char>,
+        map_0: WordMap,
+        map_1: WordMap,
+        map_2: WordMap,
+    }
+
+    impl TestData {
+        fn new() -> TestData {
+            TestData {
+                word_1: String::from("bat"),
+                word_2: String::from("tab"),
+                word_1_2_sorted: vec!['a', 'b', 't'],
+                map_0: WordMap::new(),
+                map_1: hashmap! { word_1_2_sorted.clone() => btreeset!{String::from(word_1)} },
+                map_2: hashmap! { word_1_2_sorted.clone() => btreeset!{String::from(word_1), String::from(word_2)} },
+            }
+        }
+    }
+
+    #[test]
+    fn word_sorted() {
+        assert_eq!(as_sorted_lowercase("CBabC"), vec!['a', 'b', 'b', 'c', 'c']);
+    }
+
+    #[test]
+    fn word_added_to_empty() {
+        let answers = TestData::new();
+        let mut sorted_to_origs: WordMap = Default::default();
+        add_word(&mut sorted_to_origs, &answers.word_1);
+        assert_eq!(&sorted_to_origs, &answers.map_1);
+    }
+
+    #[test]
+    fn word_added_to_existing() {
+        let answers = TestData::new();
+        let mut sorted_to_origs = answers.map_1;
+        add_word(&mut sorted_to_origs, &answers.word_2);
+        assert_eq!(&sorted_to_origs, &answers.map_2)
+    }
 }
