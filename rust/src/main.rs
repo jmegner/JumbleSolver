@@ -126,8 +126,9 @@ mod tests {
     use super::*;
 
     struct TestData {
-        word_1: String,
-        word_2: String,
+        word_1: &'static str,
+        word_2: &'static str,
+        #[allow(dead_code)]
         word_1_2_sorted: Vec<char>,
         map_0: WordMap,
         map_1: WordMap,
@@ -136,13 +137,17 @@ mod tests {
 
     impl TestData {
         fn new() -> TestData {
+            let chars_abt = vec!['a', 'b', 't'];
+            let word_bat = "bat";
+            let word_tab = "tab";
+
             TestData {
-                word_1: String::from("bat"),
-                word_2: String::from("tab"),
-                word_1_2_sorted: vec!['a', 'b', 't'],
+                word_1: "bat",
+                word_2: "tab",
+                word_1_2_sorted: chars_abt.clone(),
                 map_0: WordMap::new(),
-                map_1: hashmap! { word_1_2_sorted.clone() => btreeset!{String::from(word_1)} },
-                map_2: hashmap! { word_1_2_sorted.clone() => btreeset!{String::from(word_1), String::from(word_2)} },
+                map_1: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat)} },
+                map_2: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat), String::from(word_tab)} },
             }
         }
     }
@@ -155,7 +160,7 @@ mod tests {
     #[test]
     fn word_added_to_empty() {
         let answers = TestData::new();
-        let mut sorted_to_origs: WordMap = Default::default();
+        let mut sorted_to_origs = answers.map_0.clone();
         add_word(&mut sorted_to_origs, &answers.word_1);
         assert_eq!(&sorted_to_origs, &answers.map_1);
     }
