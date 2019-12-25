@@ -128,26 +128,38 @@ mod tests {
     struct TestData {
         word_1: &'static str,
         word_2: &'static str,
+        word_3: &'static str,
         #[allow(dead_code)]
         word_1_2_sorted: Vec<char>,
+        #[allow(dead_code)]
+        word_3_sorted: Vec<char>,
         map_0: WordMap,
         map_1: WordMap,
         map_2: WordMap,
+        map_3: WordMap,
     }
 
     impl TestData {
         fn new() -> TestData {
-            let chars_abt = vec!['a', 'b', 't'];
             let word_bat = "bat";
             let word_tab = "tab";
+            let word_cab = "cab";
+            let chars_abt = vec!['a', 'b', 't'];
+            let chars_abc = vec!['a', 'b', 'c'];
 
             TestData {
-                word_1: "bat",
-                word_2: "tab",
+                word_1: word_bat,
+                word_2: word_tab,
+                word_3: word_cab,
                 word_1_2_sorted: chars_abt.clone(),
+                word_3_sorted: chars_abc.clone(),
                 map_0: WordMap::new(),
                 map_1: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat)} },
                 map_2: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat), String::from(word_tab)} },
+                map_3: hashmap! {
+                    chars_abt.clone() => btreeset!{String::from(word_bat), String::from(word_tab)},
+                    chars_abc.clone() => btreeset!{String::from(word_cab)},
+                },
             }
         }
     }
@@ -171,5 +183,13 @@ mod tests {
         let mut sorted_to_origs = answers.map_1;
         add_word(&mut sorted_to_origs, &answers.word_2);
         assert_eq!(&sorted_to_origs, &answers.map_2)
+    }
+
+    #[test]
+    fn word_not_added_to_other() {
+        let answers = TestData::new();
+        let mut sorted_to_origs = answers.map_2;
+        add_word(&mut sorted_to_origs, &answers.word_3);
+        assert_eq!(&sorted_to_origs, &answers.map_3)
     }
 }

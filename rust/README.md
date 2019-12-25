@@ -4,6 +4,8 @@
 
 1b: You might have to also install Visual Studio build tools (2013 or later) with workload "C++ build tools", individual components "Windows 10 SDK [some version]" and language pack "English".  Here is [VS2019 build tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019) or you can probably select latest community edition of Visual Studio from [this downloads page](https://visualstudio.microsoft.com/downloads/).
 
+1c: To be able to add cargo dependencies via CLI, do `cargo install cargo-edit` and that will allow you to do stuff like `cargo add some-desired-crate` instead of manually editing Cargo.toml file.
+
 2: Install [vscode](https://code.visualstudio.com/download), preferably system installer.
 
 3: If you like vim, install [vim extension](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim).
