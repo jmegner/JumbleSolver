@@ -118,12 +118,9 @@ fn as_sorted_lowercase(word: &str) -> Vec<char> {
 }
 
 #[cfg(test)]
-#[macro_use]
-extern crate maplit;
-
-#[cfg(test)]
 mod tests {
     use super::*;
+    use maplit::{hashmap, btreeset};
 
     struct TestData {
         word_1: &'static str,
