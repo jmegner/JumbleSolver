@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "gdb",
+            "request": "launch",
+            "name": "Non-working GDB (Native Debug) Launch Program",
+            "target": "${workspaceRoot}/target/debug/jumble_solver_rust.exe",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+        },
+
+        {
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
