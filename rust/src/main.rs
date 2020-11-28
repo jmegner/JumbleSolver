@@ -29,8 +29,8 @@ The question/? operator is used on Result types, either UNWRAPPING the Ok's inne
 RETURNING the Err's inner value;
 https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html
 
-I still don't fully understand why our Err portion of our Result types was chosen to be
-Box<dyn Error>; I think we need to box the error so the size/type does not have to be fully
+My theory on why our Err portion of our Result types was chosen to be
+Box<dyn Error> is: I think we need to box the error so the size/type does not have to be fully
 determined at build time (and furthermore we don't have to choose a type at build time and convert
 errors into our chosen type); I think the "dyn" keyword is part of making it explicit that "Error"
 in "dyn Error" is a trait (dynamically sized), not a type (statically sized).
@@ -120,7 +120,7 @@ fn as_sorted_lowercase(word: &str) -> Vec<char> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use maplit::{hashmap, btreeset};
+    use maplit::{btreeset, hashmap};
 
     struct TestData {
         word_1: &'static str,
@@ -154,8 +154,8 @@ mod tests {
                 map_1: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat)} },
                 map_2: hashmap! { chars_abt.clone() => btreeset!{String::from(word_bat), String::from(word_tab)} },
                 map_3: hashmap! {
-                    chars_abt.clone() => btreeset!{String::from(word_bat), String::from(word_tab)},
-                    chars_abc.clone() => btreeset!{String::from(word_cab)},
+                    chars_abt => btreeset!{String::from(word_bat), String::from(word_tab)},
+                    chars_abc => btreeset!{String::from(word_cab)},
                 },
             }
         }
