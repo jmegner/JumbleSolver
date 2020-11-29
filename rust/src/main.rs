@@ -16,7 +16,7 @@ Rust has two naming styles...
 
 Rust has Hindley-Milner type inference, where the desired return type can be
 used by the compiler to select the appropriate function; sometimes the
-turbofish operator ("::<Something>") is needed (especially for collect method)
+turbofish operator ("::<SomeType>") is needed (especially for collect method)
 for compiler to figure out desired return type; articles:
     https://matematikaadit.github.io/posts/rust-turbofish.html
     https://techblog.tonsser.com/posts/what-is-rusts-turbofish
@@ -29,11 +29,13 @@ The question/? operator is used on Result types, either UNWRAPPING the Ok's inne
 RETURNING the Err's inner value;
 https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html
 
-My theory on why our Err portion of our Result types was chosen to be
-Box<dyn Error> is: I think we need to box the error so the size/type does not have to be fully
-determined at build time (and furthermore we don't have to choose a type at build time and convert
-errors into our chosen type); I think the "dyn" keyword is part of making it explicit that "Error"
-in "dyn Error" is a trait (dynamically sized), not a type (statically sized).
+The Err portion of our Result types was chosen to be Box<dyn Error> so the size/type does not have
+to be fully determined at build time (and furthermore we don't have to choose a type at build time
+and convert errors into our chosen type); I think the "dyn" keyword is part of making it explicit that
+"Error" in "dyn Error" is a trait (dynamically sized), not a type (statically sized).
+
+For more about error handling in Rust, Shesh Babu's "Beginner's guide to Error Handling in Rust" seems
+like a good read: http://www.sheshbabu.com/posts/rust-error-handling/
 
 As of 2019-12-04, Racer issue #1033 means that RLS autocomplete does not work for all things inside the
 standard prelude; when I was using std::convert::Into<T>::into, I had to add "use
