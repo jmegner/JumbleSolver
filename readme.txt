@@ -8,6 +8,7 @@ Used languages:
     Java
     JavaScript
     Perl
+    PowerShell
     Python
     Ruby
     Rust
