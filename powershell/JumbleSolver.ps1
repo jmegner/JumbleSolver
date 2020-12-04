@@ -15,97 +15,37 @@
 # https://devblogs.microsoft.com/powershell/understanding-powershells-type-conversion-magic/
 
 using namespace System.Collections.Generic
+
+# putting param here (instead of inside of an explicit helper Main function) means
+# that the user gets flag autocomplete inside a powershell session
+[CmdletBinding()]
+param (
+    [Switch]
+    $Idiomatic,
+
+    [Switch]
+    $Fast,
+
+    [Parameter(ValueFromRemainingArguments)]
+    [string[]]
+    $Paths
+)
+
+# switch parameters are better than bool parameters:
+# https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.1#switch-parameters
+
 $accelerators = [PowerShell].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 $accelerators::Add("StringToStrings",'Dictionary[string,SortedSet[string]]')
 
-# note: normally for specifying dotnet types outside of accelerators, there must be no spaces within the type
-# and commas must be escaped with the backtick (`); example on line below...
+# begin functions ##############################################################
+
+# note: normally for specifying dotnet types outside of accelerators and
+# outside of [] braces, there must be no spaces within the type and commas must
+# be escaped with the backtick (`); example on line below...
 #$someVar = New-Object System.Collections.Generic.Dictionary[int`,int]
 
-function Main {
-    [CmdletBinding()]
-    param (
-        [Switch]
-        $Idiomatic,
-
-        [Switch]
-        $Fast,
-
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]
-        $Paths
-    )
-
-    # switch parameters are better than bool parameters:
-    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.1#switch-parameters
-
-    if($Paths.Count -eq 0) {
-        # note: later versions of powershell (like 7) are accessible via "pwsh" once you install them
-        Write-Output "usage: powershell -executionpolicy bypass -File .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
-        Write-Output "or you could run enable_running_powershell_directly.bat to change powershell execution policy"
-        Write-Output "and then usage simplifies to: .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
-        exit 1
-    }
-
-    # the Fast way and the nonFast-nonIdiomatic way both use System.Collections.Generic.Dictionary<K,V>
-    # for better type safety; the Idiomatic way uses powershell's builtin hash table
-    # which is dotnet's System.Collections.HashTable
-
-    Write-Output "Measuring time as we read and process dictionary files..."
-    [TimeSpan] $preparationSpan = 0
-
-    if($Idiomatic) {
-        # this is the idiomatic way, but unfortunately the "Sort-Object
-        # -Unique" means all file contents are held in RAM, which I'm trying
-        # to avoid across my JumblerSolver implementations, but it is
-        # interesting to see an idiomatic one-liner even if it violates that
-        # desire; takes ~17s to process twl06.txt
-        $preparationSpan = Measure-Command {
-            $sortedToOrigs = Get-Content $Paths |
-            Sort-Object -Unique |
-            Group-Object { -join($_.ToCharArray() | Sort-Object)} -AsHashTable -AsString
-        }
-    }
-    elseif($Fast) {
-        # takes ~0.2s to process twl06.txt and much faster than everything
-        # else because it doesn't use pipelines or call nonmember functions
-        $sortedToOrigs = New-Object StringToStrings
-        $preparationSpan = Measure-Command { AddFile $sortedToOrigs $Paths}
-    }
-    else {
-        # this way uses pipelines (and AddWord has explicit pipeline support), which
-        # is a neat powershell thing;
-        $sortedToOrigs = New-Object StringToStrings
-        $preparationSpan = Measure-Command { Get-Content $Paths | AddWord $sortedToOrigs }
-
-        # below is "simpler" (and >2x slower) way where AddWord could just take a single
-        # (nonarray) string param for the original word; note that "ForEach-Object" has
-        # "%" as an alias, so it is common to see "%{...}" in powershell;
-        #
-        #$preparationSpan = Measure-Command { Get-Content $Paths | ForEach-Object { AddWord $sortedToOrigs $_ } }
-    }
-
-    Write-Output "took $($preparationSpan.TotalSeconds) seconds"
-
-    [string] $jumbledWord = ""
-    while(($jumbledWord = Read-Host "$").Length -gt 0) {
-
-        $jumbledWord = $jumbledWord.ToLowerInvariant()
-        [string] $sortedWord = SortWord $jumbledWord
-
-        if($sortedToOrigs.ContainsKey($sortedWord)) {
-            Write-Output ($sortedToOrigs[$sortedWord] -join ' ').ToLowerInvariant()
-        }
-        else {
-            Write-Output "no anagram in dictionary"
-        }
-    }
-
-    exit 0
-}
-
-# this is only written to show how removing nonmember function calls and pipelines
-# makes powershell so much faster (~7s to ~0.2s for twl06.txt)
+# this is only written to show how removing nonmember function calls and
+# pipelines makes powershell so much faster (~7s to ~0.2s for twl06.txt)
 function AddFile {
     [CmdletBinding()]
     param (
@@ -143,15 +83,17 @@ function AddFile {
 
 # for functions that support pipelining, you need one parameter designated as
 # accepting pipeline input; you should declare that parameter as an array;
-# you'll need to actually specify the three parts of a function (Begin, Process, End);
-# when function is part of pipeline, Begin block is executed once, then Process block
-# is executed repeatedly for every pipelined item (and the pipelined array parameter will have
-# that one item), then End block is executed once.
+# you'll need to actually specify the three parts of a function (Begin,
+# Process, End); when function is part of pipeline, Begin block is executed
+# once, then Process block is executed repeatedly for every pipelined item (and
+# the pipelined array parameter will have that one item), then End block is
+# executed once.
 #
-# note that this function might also be called outside of a pipeline and the "pipelined"
-# array parameter will have the entire array you passed it;
+# note that this function might also be called outside of a pipeline and the
+# "pipelined" array parameter will have the entire array you passed it;
 #
-# the pipeline parameter being an array is nice so that you can use your function 3 ways:
+# the pipeline parameter being an array is nice so that you can use your
+# function 3 ways:
 # 1: "SomeSourceOfItems | Func"
 # 2: "Func $arrayOfItems"
 # 3: "Func $justOneItem"
@@ -177,8 +119,8 @@ function AddWord {
             $sortedWord = SortWord $lowerWord
 
             # doing a "$SortedToOrigs.TryGetValue($sortedWord, [ref] $otherOrigs)"
-            # is really slow in PowerShell, probably because of the [ref] feature,
-            # so we are avoiding TryGetValue
+            # is really slow in PowerShell, probably because of the [ref]
+            # feature, so we are avoiding TryGetValue
 
             $otherOrigs = $SortedToOrigs[$sortedWord]
 
@@ -212,7 +154,70 @@ function SortWord {
     return [string]::new($chars)
 }
 
-# END OF FUNCTIONS #############################################################
+# end functions ################################################################
 
-# "@args" is array splatting: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-7.1#splatting-with-arrays
-Main @args
+if($Paths.Count -eq 0) {
+    # note: later versions of powershell (like 7) are accessible via "pwsh" once you install them
+    Write-Output "usage: powershell -executionpolicy bypass -File .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
+    Write-Output "or you could run enable_running_powershell_directly.bat to change powershell execution policy"
+    Write-Output "and then usage simplifies to: .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
+    exit 1
+}
+
+# the Fast way and the nonFast-nonIdiomatic way both use
+# System.Collections.Generic.Dictionary<K,V> for better type safety; the
+# Idiomatic way uses powershell's builtin hash table which is dotnet's
+# System.Collections.HashTable
+
+Write-Output "Measuring time as we read and process dictionary files..."
+[TimeSpan] $preparationSpan = 0
+
+if($Idiomatic) {
+    # this is the idiomatic way, but unfortunately the "Sort-Object
+    # -Unique" means all file contents are held in RAM, which I'm trying
+    # to avoid across my JumblerSolver implementations, but it is
+    # interesting to see an idiomatic one-liner even if it violates that
+    # desire; takes ~17s to process twl06.txt
+    $preparationSpan = Measure-Command {
+        $sortedToOrigs = Get-Content $Paths |
+        Sort-Object -Unique |
+        Group-Object { -join($_.ToCharArray() | Sort-Object)} -AsHashTable -AsString
+    }
+}
+elseif($Fast) {
+    # takes ~0.2s to process twl06.txt and much faster than everything
+    # else because it doesn't use pipelines or call nonmember functions
+    $sortedToOrigs = New-Object StringToStrings
+    $preparationSpan = Measure-Command { AddFile $sortedToOrigs $Paths}
+}
+else {
+    # this way uses pipelines (and AddWord has explicit pipeline support), which
+    # is a neat powershell thing;
+    $sortedToOrigs = New-Object StringToStrings
+    $preparationSpan = Measure-Command { Get-Content $Paths | AddWord $sortedToOrigs }
+
+    # below is "simpler" (and >2x slower) way where AddWord could just take a single
+    # (nonarray) string param for the original word; note that "ForEach-Object" has
+    # "%" as an alias, so it is common to see "%{...}" in powershell;
+    #
+    #$preparationSpan = Measure-Command { Get-Content $Paths | ForEach-Object { AddWord $sortedToOrigs $_ } }
+}
+
+Write-Output "took $($preparationSpan.TotalSeconds) seconds"
+
+[string] $jumbledWord = ""
+while(($jumbledWord = Read-Host "$").Length -gt 0) {
+
+    $jumbledWord = $jumbledWord.ToLowerInvariant()
+    [string] $sortedWord = SortWord $jumbledWord
+
+    if($sortedToOrigs.ContainsKey($sortedWord)) {
+        Write-Output ($sortedToOrigs[$sortedWord] -join ' ').ToLowerInvariant()
+    }
+    else {
+        Write-Output "no anagram in dictionary"
+    }
+}
+
+exit 0
+
