@@ -51,7 +51,8 @@ $accelerators::Add("StringToStrings", 'Dictionary[string,SortedSet[string]]')
 # be escaped with the backtick (`); example on line below...
 #$someVar = New-Object System.Collections.Generic.Dictionary[int`,int]
 
-# this is only written to show how removing nonmember function calls and
+# this is only written to show how removing function calls (AddFile is a
+# function call but [array]::Sort and someString.ToCharArray are methods) and
 # pipelines makes powershell so much faster (~7s to ~0.2s for twl06.txt)
 function AddFile {
     [CmdletBinding()]
@@ -187,8 +188,8 @@ if($Idiomatic) {
     }
 }
 elseif($Fast) {
-    # takes ~0.2s to process twl06.txt and much faster than everything
-    # else because it doesn't use pipelines or call nonmember functions
+    # takes ~0.2s to process twl06.txt and much faster than everything else
+    # because it doesn't use pipelines or call functions (methods are fine)
     $sortedToOrigs = [StringToStrings]::new()
     $preparationSpan = Measure-Command { AddFile $sortedToOrigs $Paths}
 }
