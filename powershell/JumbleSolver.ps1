@@ -16,17 +16,21 @@
 
 using namespace System.Collections.Generic
 
-# putting param here (instead of inside of an explicit helper Main function) means
-# that the user gets flag autocomplete inside a powershell session
+# putting param here (instead of inside of an explicit helper Main function)
+# means that the user gets flag autocomplete inside a powershell session
 [CmdletBinding()]
 param (
+    [Switch]
+    $NoPrompt,
+
     [Switch]
     $Idiomatic,
 
     [Switch]
     $Fast,
 
-    [Parameter(ValueFromRemainingArguments)]
+    [Parameter(Mandatory,ValueFromRemainingArguments)]
+    [ValidateCount(1,[int]::MaxValue)]
     [string[]]
     $Paths
 )
@@ -34,8 +38,11 @@ param (
 # switch parameters are better than bool parameters:
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.1#switch-parameters
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 $accelerators = [PowerShell].Assembly.GetType("System.Management.Automation.TypeAccelerators")
-$accelerators::Add("StringToStrings",'Dictionary[string,SortedSet[string]]')
+$accelerators::Add("StringToStrings", 'Dictionary[string,SortedSet[string]]')
 
 # begin functions ##############################################################
 
@@ -48,6 +55,7 @@ $accelerators::Add("StringToStrings",'Dictionary[string,SortedSet[string]]')
 # pipelines makes powershell so much faster (~7s to ~0.2s for twl06.txt)
 function AddFile {
     [CmdletBinding()]
+    [OutputType([void])]
     param (
         [Parameter(Mandatory)]
         [StringToStrings]
@@ -103,6 +111,7 @@ function AddFile {
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-7.1
 function AddWord {
     [CmdletBinding()]
+    [OutputType([void])]
     param (
         [Parameter(Mandatory)]
         [StringToStrings]
@@ -139,6 +148,7 @@ function AddWord {
 
 function SortWord {
     [CmdletBinding()]
+    [OutputType([string])]
     param (
         [Parameter(Mandatory)]
         [string]
@@ -155,14 +165,6 @@ function SortWord {
 }
 
 # end functions ################################################################
-
-if($Paths.Count -eq 0) {
-    # note: later versions of powershell (like 7) are accessible via "pwsh" once you install them
-    Write-Output "usage: powershell -executionpolicy bypass -File .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
-    Write-Output "or you could run enable_running_powershell_directly.bat to change powershell execution policy"
-    Write-Output "and then usage simplifies to: .\JumbleSolver.ps1 [-Idiomatic] [-Fast] DICT_FILE1 [DICT_FILE2] [...]"
-    exit 1
-}
 
 # the Fast way and the nonFast-nonIdiomatic way both use
 # System.Collections.Generic.Dictionary<K,V> for better type safety; the
@@ -187,13 +189,13 @@ if($Idiomatic) {
 elseif($Fast) {
     # takes ~0.2s to process twl06.txt and much faster than everything
     # else because it doesn't use pipelines or call nonmember functions
-    $sortedToOrigs = New-Object StringToStrings
+    $sortedToOrigs = [StringToStrings]::new()
     $preparationSpan = Measure-Command { AddFile $sortedToOrigs $Paths}
 }
 else {
     # this way uses pipelines (and AddWord has explicit pipeline support), which
     # is a neat powershell thing;
-    $sortedToOrigs = New-Object StringToStrings
+    $sortedToOrigs = [StringToStrings]::new()
     $preparationSpan = Measure-Command { Get-Content $Paths | AddWord $sortedToOrigs }
 
     # below is "simpler" (and >2x slower) way where AddWord could just take a single
@@ -204,6 +206,10 @@ else {
 }
 
 Write-Output "took $($preparationSpan.TotalSeconds) seconds"
+
+if($NoPrompt) {
+    exit 0
+}
 
 [string] $jumbledWord = ""
 while(($jumbledWord = Read-Host "$").Length -gt 0) {
