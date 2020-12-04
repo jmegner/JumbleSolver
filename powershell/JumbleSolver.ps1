@@ -13,6 +13,10 @@
 #
 # understanding powershell automatic type conversion
 # https://devblogs.microsoft.com/powershell/understanding-powershells-type-conversion-magic/
+#
+# powershell functions have powerful parameter processing, but methods are
+# simpler and faster:
+# https://itnext.io/new-to-powershell-use-classes-ab7b1e6f72ec
 
 using namespace System.Collections.Generic
 
